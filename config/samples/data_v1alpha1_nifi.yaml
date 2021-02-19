@@ -1,0 +1,7 @@
+apiVersion: data.nifi.site/v1alpha1
+kind: Nifi
+metadata:
+  name: nifi-sample
+spec:
+  # Add fields here
+  foo: bar
