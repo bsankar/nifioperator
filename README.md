@@ -9,7 +9,7 @@ To be updated
 
 Requires a K8S cluster and cluster admin access
 ```
-Comming sson
+Comming soon
 ```
 
 ### Installing
