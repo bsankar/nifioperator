@@ -22,7 +22,9 @@ import (
 	datav1alpha1 "github.com/bsankar/nifioperator/api/v1alpha1"
 	"github.com/go-logr/logr"
 	appsv1 "k8s.io/api/apps/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -54,8 +56,27 @@ func (r *NifiReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 	nifi := &datav1alpha1.Nifi{}
 	err := r.Get(ctx, req.NamespacedName, nifi)
 	if err != nil {
+		if errors.IsNotFound(err) {
+			return ctrl.Result{}, nil
+		}
 		return ctrl.Result{}, err
 	}
+
+	found := &appsv1.Deployment{}
+	err = r.Get(ctx, types.NamespacedName{Name: nifi.Name, Namespace: nifi.Namespace}, found)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			// Define and create a new deployment.
+			dep := r.deploymentForNifi(nifi)
+			if err = r.Create(ctx, dep); err != nil {
+				return ctrl.Result{}, err
+			}
+			return ctrl.Result{Requeue: true}, nil
+		} else {
+			return ctrl.Result{}, err
+		}
+	}
+
 	return ctrl.Result{}, nil
 }
 
